@@ -1,0 +1,14 @@
+/Users/fay/Desktop/Code/Rust/kmeans/target/release/deps/spin-5aba1d7f343e7959.rmeta: /Users/fay/.cargo/registry/src/github.com-1ecc6299db9ec823/spin-0.9.4/src/lib.rs /Users/fay/.cargo/registry/src/github.com-1ecc6299db9ec823/spin-0.9.4/src/barrier.rs /Users/fay/.cargo/registry/src/github.com-1ecc6299db9ec823/spin-0.9.4/src/lazy.rs /Users/fay/.cargo/registry/src/github.com-1ecc6299db9ec823/spin-0.9.4/src/mutex.rs /Users/fay/.cargo/registry/src/github.com-1ecc6299db9ec823/spin-0.9.4/src/mutex/spin.rs /Users/fay/.cargo/registry/src/github.com-1ecc6299db9ec823/spin-0.9.4/src/once.rs /Users/fay/.cargo/registry/src/github.com-1ecc6299db9ec823/spin-0.9.4/src/rwlock.rs /Users/fay/.cargo/registry/src/github.com-1ecc6299db9ec823/spin-0.9.4/src/relax.rs
+
+/Users/fay/Desktop/Code/Rust/kmeans/target/release/deps/libspin-5aba1d7f343e7959.rlib: /Users/fay/.cargo/registry/src/github.com-1ecc6299db9ec823/spin-0.9.4/src/lib.rs /Users/fay/.cargo/registry/src/github.com-1ecc6299db9ec823/spin-0.9.4/src/barrier.rs /Users/fay/.cargo/registry/src/github.com-1ecc6299db9ec823/spin-0.9.4/src/lazy.rs /Users/fay/.cargo/registry/src/github.com-1ecc6299db9ec823/spin-0.9.4/src/mutex.rs /Users/fay/.cargo/registry/src/github.com-1ecc6299db9ec823/spin-0.9.4/src/mutex/spin.rs /Users/fay/.cargo/registry/src/github.com-1ecc6299db9ec823/spin-0.9.4/src/once.rs /Users/fay/.cargo/registry/src/github.com-1ecc6299db9ec823/spin-0.9.4/src/rwlock.rs /Users/fay/.cargo/registry/src/github.com-1ecc6299db9ec823/spin-0.9.4/src/relax.rs
+
+/Users/fay/Desktop/Code/Rust/kmeans/target/release/deps/spin-5aba1d7f343e7959.d: /Users/fay/.cargo/registry/src/github.com-1ecc6299db9ec823/spin-0.9.4/src/lib.rs /Users/fay/.cargo/registry/src/github.com-1ecc6299db9ec823/spin-0.9.4/src/barrier.rs /Users/fay/.cargo/registry/src/github.com-1ecc6299db9ec823/spin-0.9.4/src/lazy.rs /Users/fay/.cargo/registry/src/github.com-1ecc6299db9ec823/spin-0.9.4/src/mutex.rs /Users/fay/.cargo/registry/src/github.com-1ecc6299db9ec823/spin-0.9.4/src/mutex/spin.rs /Users/fay/.cargo/registry/src/github.com-1ecc6299db9ec823/spin-0.9.4/src/once.rs /Users/fay/.cargo/registry/src/github.com-1ecc6299db9ec823/spin-0.9.4/src/rwlock.rs /Users/fay/.cargo/registry/src/github.com-1ecc6299db9ec823/spin-0.9.4/src/relax.rs
+
+/Users/fay/.cargo/registry/src/github.com-1ecc6299db9ec823/spin-0.9.4/src/lib.rs:
+/Users/fay/.cargo/registry/src/github.com-1ecc6299db9ec823/spin-0.9.4/src/barrier.rs:
+/Users/fay/.cargo/registry/src/github.com-1ecc6299db9ec823/spin-0.9.4/src/lazy.rs:
+/Users/fay/.cargo/registry/src/github.com-1ecc6299db9ec823/spin-0.9.4/src/mutex.rs:
+/Users/fay/.cargo/registry/src/github.com-1ecc6299db9ec823/spin-0.9.4/src/mutex/spin.rs:
+/Users/fay/.cargo/registry/src/github.com-1ecc6299db9ec823/spin-0.9.4/src/once.rs:
+/Users/fay/.cargo/registry/src/github.com-1ecc6299db9ec823/spin-0.9.4/src/rwlock.rs:
+/Users/fay/.cargo/registry/src/github.com-1ecc6299db9ec823/spin-0.9.4/src/relax.rs:
