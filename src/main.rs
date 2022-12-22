@@ -14,25 +14,20 @@ use std::time::Instant;
 // Command line args as follows - path to input image, path of output image, 
 // k value, minkowski distance p value, # of iterations
 
-
 fn main() {
-   // get params from user input
-   let mut params = Vec::new();
-   for arg in env::args().skip(1) {
-      params.push(arg);
-   }
+   // get params from command line args
+   let in_path = env::args().nth(1).unwrap();
+   let out_path = env::args().nth(2).unwrap();
 
-   let in_path = &params[0];
-   let out_path = &params[1];
-
-   let means = i32::from_str(&params[2]).unwrap();
-   let distance = f64::from_str(&params[4]).unwrap();
-   let iterations = i32::from_str(&params[3]).unwrap();
+   let means = i32::from_str(&env::args().nth(3).unwrap()).unwrap();
+   let distance = f64::from_str(&env::args().nth(4).unwrap()).unwrap();
+   let iterations = i32::from_str(&env::args().nth(5).unwrap()).unwrap();
 
    // get start time
    let start = Instant::now();
 
-   // load image, get dimensions and raw data as 1d vec of 3 element tuples
+   // load image, get dimensions and raw data as 2d vec of 4 element arrays
+   // surprisingly, creating a "raw" copy greatly improves performance 
    let img: DynamicImage = image::open(in_path).unwrap();
    let dim: (u32, u32) = img.dimensions();
    let raw_data = get_raw_image(&img);

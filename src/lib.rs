@@ -4,8 +4,7 @@ use rand::{self, Rng};
 
 pub fn get_raw_image(img: &DynamicImage) -> Vec<Vec<[u8; 4]>> {
    let dim = img.dimensions();
-   let raw_data = (0..dim.1).map(|y|
-                                       (0..dim.0).map(|x|
+   let raw_data = (0..dim.1).map(|y|(0..dim.0).map(|x|
                                           img.get_pixel(x, y).0).collect()
                                        ).collect();
       
