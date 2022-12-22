@@ -2,26 +2,37 @@ use num_traits::Pow;
 use image::*;
 use rand::{self, Rng};
 
-pub fn init_centroids(img: &DynamicImage, k: i32) -> Vec<(f64,f64,f64)> {
+pub fn get_raw_image(img: &DynamicImage) -> Vec<Vec<[u8; 4]>> {
+   let dim = img.dimensions();
+   let raw_data = (0..dim.1).map(|y|
+                                       (0..dim.0).map(|x|
+                                          img.get_pixel(x, y).0).collect()
+                                       ).collect();
+      
+   raw_data
+}
+
+pub fn init_centroids(data: &Vec<Vec<[u8; 4]>>, k: i32) -> Vec<(f64,f64,f64)> {
    let mut centroids = Vec::new();   
    let mut thread_rng = rand::thread_rng();
    for _ in 0..k {
-      let rnd_x = thread_rng.gen_range(0..img.dimensions().0);
-      let rnd_y = thread_rng.gen_range(0..img.dimensions().1); 
-      let pixel = (img.get_pixel(rnd_x, rnd_y).0[0] as f64, 
-                                    img.get_pixel(rnd_x, rnd_y).0[1] as f64,
-                                    img.get_pixel(rnd_x, rnd_y).0[2] as f64);  
+      let rnd_x = thread_rng.gen_range(0..data[0].len());
+      let rnd_y = thread_rng.gen_range(0..data.len()); 
+
+      let pixel = (data[rnd_y][rnd_x][0] as f64,
+                                    data[rnd_y][rnd_x][1] as f64,
+                                    data[rnd_y][rnd_x][2] as f64); 
+
       centroids.push(pixel);
    }                                                                                
 centroids                                                   
 }
 
-pub fn iterate(img: &DynamicImage, 
+pub fn iterate(data: &Vec<Vec<[u8; 4]>>, 
                    centroids: &Vec<(f64, f64, f64)>, 
                    distance_p: &f64) 
                    -> Vec<(f64, f64, f64)>{
    
-
    let mut container: Vec<(f64, f64, f64)> = Vec::new();
    let mut num_pixels: Vec<usize> = Vec::new();
    for _ in 0..centroids.len() {
@@ -29,23 +40,23 @@ pub fn iterate(img: &DynamicImage,
       num_pixels.push(0);
    }
    
-   for y in 0..img.dimensions().1 { 
-     for  x in 0..img.dimensions().0 {
-      let data = (img.get_pixel(x,y).0[0] as f64, 
-                                   img.get_pixel(x,y).0[1] as f64,
-                                   img.get_pixel(x,y).0[2] as f64);
+   for y in 0..data.len() as usize { 
+     for  x in 0..data[0].len() as usize {
+      let pixel = (data[y][x][0] as f64, 
+                                   data[y][x][1] as f64,
+                                   data[y][x][2] as f64);
       let mut min_dist = f64::MAX;
       let mut centroid_id = 0;
       
       for c in 0..centroids.len() {
-         let dist = get_distance_3d(&centroids[c], &data, distance_p);
+         let dist = get_distance_3d(&centroids[c], &pixel, distance_p);
          if dist < min_dist {
             min_dist = dist;
             centroid_id = c;
          }
       }
 
-      container[centroid_id] = tup3_pairwise_addition(container[centroid_id], &data);
+      container[centroid_id] = tup3_pairwise_addition(container[centroid_id], &pixel);
       num_pixels[centroid_id] += 1;}
    }
    
@@ -59,13 +70,10 @@ pub fn iterate(img: &DynamicImage,
 }
 
 pub fn create_img (mut target: image::RgbaImage, 
-               dim: &(u32, u32), 
-               img: &image::DynamicImage, 
-               centroids: &Vec<(f64, f64, f64)>, p: &f64) 
-               -> RgbaImage{
-   
-
-    
+                  img: &image::DynamicImage, 
+                  centroids: &Vec<(f64, f64, f64)>, p: &f64) 
+                  -> RgbaImage{
+   let dim = img.dimensions(); 
    
    for x in 0..dim.0 {
       for y in 0..dim.1 {
@@ -105,7 +113,7 @@ pub fn tup3_pairwise_addition(mut tuple_one: (f64, f64, f64), tuple_two: &(f64, 
 }
 
 // generalized(minkowski) distance function, when p=1 its manhattan, 
-//p=2 euclidean
+//p=2 euclidean, 25+ chebyshev
 pub fn get_distance_3d (to: &(f64, f64, f64), 
                      from: &(f64, f64, f64), 
                      p: &f64 ) -> f64 {

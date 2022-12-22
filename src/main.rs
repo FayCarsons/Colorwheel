@@ -2,7 +2,7 @@ extern crate tuple_map;
 extern crate image;
 
 mod lib;
-use lib::{init_centroids, iterate, create_img};
+use lib::{init_centroids, iterate, create_img, get_raw_image};
 use image::*;
 use std::str::{FromStr};
 use std::env;
@@ -35,31 +35,25 @@ fn main() {
    // load image, get dimensions and raw data as 1d vec of 3 element tuples
    let img: DynamicImage = image::open(in_path).unwrap();
    let dim: (u32, u32) = img.dimensions();
-   let get_image = start.elapsed();
-   println!("Time to get image: {:?}", get_image);
+   let raw_data = get_raw_image(&img);
+   
 
    // place centroids, random points on image
-   let mut centroids: Vec<(f64, f64, f64)> = init_centroids(&img, means);
-   let get_centroids = start.elapsed();
-   println!("Time to get centroids: {:?}", get_centroids);
+   let mut centroids: Vec<(f64, f64, f64)> = init_centroids(&raw_data, means);
 
    // iterate centroids/do clustering
    for _ in 0..=iterations {
-      centroids = iterate(&img, &centroids, &distance);
+      centroids = iterate(&raw_data, &centroids, &distance);
    }
-   let iter_time = start.elapsed();
-   println!("Time to iterate: {:?}", iter_time);
    
-   //create final image
+   // create final image
    let mut final_img: RgbaImage = RgbaImage::new(dim.0, dim.1);
-   final_img = create_img(final_img, &dim, &img, &centroids, &distance);
-   let create_img = start.elapsed();
-   println!("Time to create output img: {:?}", create_img);
+   final_img = create_img(final_img, &img, &centroids, &distance);
    
    // save image
    final_img.save(out_path).unwrap();
 
-   //get duration 
+   // get duration 
    let duration = start.elapsed();
    println!("Executed In {:?} Seconds", duration);
 } 
