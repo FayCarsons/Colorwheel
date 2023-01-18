@@ -1,6 +1,3 @@
-extern crate tuple_map;
-extern crate image;
-
 mod lib;
 use lib::{init_centroids, iterate, create_img, get_raw_image};
 use image::*;
@@ -19,9 +16,9 @@ fn main() {
    let in_path = env::args().nth(1).unwrap();
    let out_path = env::args().nth(2).unwrap();
 
-   let means = i32::from_str(&env::args().nth(3).unwrap()).unwrap();
+   let means = u16::from_str(&env::args().nth(3).unwrap()).unwrap();
    let distance = f64::from_str(&env::args().nth(4).unwrap()).unwrap();
-   let iterations = i32::from_str(&env::args().nth(5).unwrap()).unwrap();
+   let iterations = u16::from_str(&env::args().nth(5).unwrap()).unwrap();
 
    // get start time
    let start = Instant::now();
@@ -36,6 +33,7 @@ fn main() {
    // place centroids, random points on image
    let mut centroids: Vec<(f64, f64, f64)> = init_centroids(&raw_data, means);
 
+   
    // iterate centroids/do clustering
    for _ in 0..=iterations {
       centroids = iterate(&raw_data, &centroids, &distance);
@@ -43,11 +41,10 @@ fn main() {
    
    // create final image
    let mut final_img: RgbaImage = RgbaImage::new(dim.0, dim.1);
-   final_img = create_img(final_img, &img, &centroids, &distance);
+   final_img = create_img(final_img, &raw_data, &centroids, &distance);
    
    // save image
    final_img.save(out_path).unwrap();
-
    // get duration 
    let duration = start.elapsed();
    println!("Executed In {:?} Seconds", duration);
