@@ -12,7 +12,7 @@ pub fn get_raw_image(img: &DynamicImage) -> Vec<Vec<[u8; 4]>> {
 
 pub fn init_centroids(data: &Vec<Vec<[u8; 4]>>, means: u16) 
                      -> Vec<(f64,f64,f64)> {
-   let mut centroids = Vec::new();   
+   let mut centroids = Vec::with_capacity(means as usize);   
    let mut thread_rng = rand::thread_rng();
 
    for _ in 0..means {
@@ -32,23 +32,19 @@ pub fn iterate(data: &Vec<Vec<[u8; 4]>>,
                centroids: &Vec<(f64, f64, f64)>, 
                distance_p: &f64) 
                -> Vec<(f64, f64, f64)> {
-   let mut container: Vec<(f64, f64, f64)> = Vec::new();
-   let mut num_pixels: Vec<usize> = Vec::new();
-   for _ in 0..centroids.len() {
-      container.push((0.0,0.0,0.0));
-      num_pixels.push(0);
-   }
+   let mut container = vec![(0.0,0.0,0.0); centroids.len()];
+   let mut num_pixels = vec![0; centroids.len()];
    
    for y in 0..data.len() { 
       for  x in 0..data[0].len() {
          let pixel = (data[y][x][0] as f64, 
                                        data[y][x][1] as f64,
                                        data[y][x][2] as f64);
-         let mut min_dist = f64::MAX;
+         let mut min_dist = u64::MAX as f64;
          let mut centroid_id = 0;
       
       for (c, val) in centroids.iter().enumerate() {
-         let dist = get_distance_3d(val, &pixel, distance_p);
+         let dist = minkowski_distance(val, &pixel, distance_p);
          if dist < min_dist {
             min_dist = dist;
             centroid_id = c;
@@ -78,28 +74,24 @@ pub fn create_img (mut target: image::RgbaImage,
    
    for x in 0..dim.0 {
       for y in 0..dim.1 {
-         
          let r = data[y][x][0] as f64;
          let g = data[y][x][1] as f64;
          let b = data[y][x][2] as f64;
          let data = (r, g, b);
 
-         let mut min_dist = 1000000000.0;
+         let mut min_dist = u64::MAX as f64;
          let mut centroid_id = 0; 
          
          for (c, val) in centroids.iter().enumerate() 
          {
-            let dist = get_distance_3d(val, &data, p);
+            let dist = minkowski_distance(val, &data, p);
             if dist < min_dist {
                min_dist = dist;
                centroid_id = c;
             }
          }
-      
-         let out_r = centroids[centroid_id].0 as u8;
-         let out_g = centroids[centroid_id].1 as u8;
-         let out_b = centroids[centroid_id].2 as u8;
-         let pixel: Rgba<u8> = Rgba([out_r, out_g, out_b, 1]);
+         let (out_r, out_g, out_b) = centroids[centroid_id];
+         let pixel: Rgba<u8> = Rgba([out_r as u8, out_g as u8, out_b as u8, 1]);
          target.put_pixel(x as u32, y as u32, pixel);
       }
    }
@@ -117,7 +109,7 @@ pub fn tup3_add(mut tuple_one: (f64, f64, f64), tuple_two: &(f64, f64, f64))
 
 // minkowski distance function 
 // p=1 manhattan, p=2 euclidean, p=25+ chebyshev
-pub fn get_distance_3d (to: &(f64, f64, f64), 
+pub fn minkowski_distance (to: &(f64, f64, f64), 
                         from: &(f64, f64, f64), 
                         p: &f64 ) -> f64 {
    let dx = (to.0 - from.0).powf(*p);
