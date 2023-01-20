@@ -5,9 +5,6 @@ use std::str::{FromStr};
 use std::env;
 use std::time::Instant;
 
-// Image compressor that yields a cell-shading effect
-// using the kmeans algorithm
-
 // Command line args as follows - path to input image, path of output image, 
 // k value, minkowski distance p value, # of iterations
 
@@ -23,17 +20,14 @@ fn main() {
    // get start time
    let start = Instant::now();
 
-   // load image, get dimensions and raw data as 2d vec of 4 element arrays
-   // surprisingly, creating a "raw" copy greatly improves performance 
+   // load image, get dimensions and raw RGBA data as 2d vec of 4 element arrays
    let img: DynamicImage = image::open(in_path).unwrap();
    let dim: (u32, u32) = img.dimensions();
    let raw_data = get_raw_image(&img);
    
-
    // place centroids, random points on image
    let mut centroids: Vec<(f64, f64, f64)> = init_centroids(&raw_data, means);
 
-   
    // iterate centroids/do clustering
    for _ in 0..=iterations {
       centroids = iterate(&raw_data, &centroids, &distance);
@@ -45,7 +39,8 @@ fn main() {
    
    // save image
    final_img.save(out_path).unwrap();
+
    // get duration 
    let duration = start.elapsed();
-   println!("Executed In {:?} Seconds", duration);
+   println!("Executed In {duration:?} Seconds");
 } 
