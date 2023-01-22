@@ -28,12 +28,16 @@ pub fn init_centroids(data: &Vec<Vec<[u8; 4]>>, means: u16)
 centroids                                                   
 }
 
+
+
+
+
 pub fn iterate(data: &Vec<Vec<[u8; 4]>>, 
                centroids: &Vec<(f64, f64, f64)>, 
-               distance_p: &f64) 
+               p: &f64) 
                -> Vec<(f64, f64, f64)> {
    let mut container = vec![(0.0,0.0,0.0); centroids.len()];
-   let mut num_pixels = vec![0; centroids.len()];
+   let mut num_pixels = vec![0u32; centroids.len()];
    
    for y in 0..data.len() { 
       for  x in 0..data[0].len() {
@@ -41,28 +45,34 @@ pub fn iterate(data: &Vec<Vec<[u8; 4]>>,
                                        data[y][x][1] as f64,
                                        data[y][x][2] as f64);
          let mut min_dist = u64::MAX as f64;
-         let mut centroid_id = 0;
+         let mut centroid_id = usize::MAX;
       
-      for (c, val) in centroids.iter().enumerate() {
-         let dist = minkowski_distance(val, &pixel, distance_p);
-         if dist < min_dist {
-            min_dist = dist;
-            centroid_id = c;
+         for (c, val) in centroids.iter().enumerate() {
+            let dist = minkowski_distance(val, &pixel, *p);
+            if dist < min_dist {
+               min_dist = dist;
+               centroid_id = c;
+            }
          }
-      }
 
-      container[centroid_id] = tup3_add(container[centroid_id], &pixel);
-      num_pixels[centroid_id] += 1;}
+         container[centroid_id] = tup3_add(container[centroid_id], &pixel);
+         num_pixels[centroid_id] += 1;
+      }
    }
    
-   for v in 0..container.len() {
-      container[v].0 /= num_pixels[v] as f64;
-      container[v].1 /= num_pixels[v] as f64;
-      container[v].2 /= num_pixels[v] as f64;
+   for (i, val) in container.iter_mut().enumerate() {
+      val.0 /= num_pixels[i] as f64;
+      val.1 /= num_pixels[i] as f64;
+      val.2 /= num_pixels[i] as f64;
 
    }
    container
 }
+
+
+
+
+
 
 pub fn create_img (mut target: image::RgbaImage, 
                   data: &Vec<Vec<[u8; 4]>>, 
@@ -84,7 +94,7 @@ pub fn create_img (mut target: image::RgbaImage,
          
          for (c, val) in centroids.iter().enumerate() 
          {
-            let dist = minkowski_distance(val, &data, p);
+            let dist = minkowski_distance(val, &data, *p);
             if dist < min_dist {
                min_dist = dist;
                centroid_id = c;
@@ -111,10 +121,10 @@ pub fn tup3_add(mut tuple_one: (f64, f64, f64), tuple_two: &(f64, f64, f64))
 // p=1 manhattan, p=2 euclidean, p=25+ chebyshev
 pub fn minkowski_distance (to: &(f64, f64, f64), 
                         from: &(f64, f64, f64), 
-                        p: &f64 ) -> f64 {
-   let dx = (to.0 - from.0).powf(*p);
-   let dy = (to.1 - from.1).powf(*p);
-   let dz = (to.2 - from.2).powf(*p);
+                        p: f64 ) -> f64 {
+   let dx = (to.0 - from.0).powf(p);
+   let dy = (to.1 - from.1).powf(p);
+   let dz = (to.2 - from.2).powf(p);
    
    (dx.abs() + dy.abs() + dz.abs()).powf(1.0 / p)
 }
