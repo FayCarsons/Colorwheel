@@ -3,9 +3,39 @@ use lib::{create_img, get_raw_image, init_centroids, iterate, Centroid};
 
 use image::*;
 use std::io::stdin;
-use std::time::Instant;
 use std::str::FromStr;
+use std::time::Instant;
 
+struct Options {
+    input_path: String,
+    output_path: String,
+    k: u16,
+    iterations: u16,
+    mode: String,
+}
+
+impl Options {
+    fn new() -> Options {
+        let prompts = vec![
+        "Enter input path: ",
+        "Enter output path: ",
+        "Enter K value: ",
+        "Enter # of iterations: ",
+        "Enter distance metric: ",
+        "Create palette? (y/n): ",
+        ];
+
+        let opts = prompts.iter().map(|p| prompt(p)).collect::<Vec<String>>();
+
+        Options {
+            input_path: opts[0].clone(),
+            output_path: opts[1].clone(),
+            k: u16::from_str(&opts[2]).unwrap(),
+            iterations: u16::from_str(&opts[3]).unwrap(),
+            mode: opts[5].clone(),
+        }
+    }
+}
 
 fn prompt(line: &str) -> String {
     let mut input = String::new();
@@ -14,45 +44,34 @@ fn prompt(line: &str) -> String {
     input.trim().to_string()
 }
 
-fn get_args() -> (String, String, u16, u16, f64, String) {    
-    let input_path = prompt("Enter input path: ");
-    let output_path = prompt("Enter output path: ");
-    let k = u16::from_str(&prompt("Enter K value: ")).unwrap();
-    let iterations = u16::from_str(&prompt("Enter # of iterations: ")).unwrap();
-    let p = f64::from_str(&prompt("Enter distance metric: ")).unwrap();
-    let palette_mode = prompt("Use palette mode? (y/n): ").to_lowercase();
-    
-    (input_path, output_path, k, iterations, p, palette_mode)
-}
-
 fn main() {
     // get command line args
-    let (in_path, out_path, k, iterations, distance, mode) = get_args();    
+    let options = Options::new();
 
     // get start time
     let start = Instant::now();
 
     // load image, get dimensions and raw RGBA data as 2d vec of 4 element arrays
-    let img: DynamicImage = image::open(in_path).unwrap();
+    let img: DynamicImage = image::open(options.input_path).unwrap();
     let (x_size, y_size) = img.dimensions();
     let raw_data: Vec<Vec<[u8; 4]>> = get_raw_image(&img);
     let raw_time = start.elapsed();
     println!("Acquired raw image data in {raw_time:?}");
 
     // place centroids, random pixels in image
-    let mut centroids: Vec<Centroid> = init_centroids(&raw_data, &k);
+    let mut centroids: Vec<Centroid> = init_centroids(&raw_data, &options.k);
 
     // iterate centroids/do clustering
-    for _ in 0..iterations {
+    for _ in 0..options.iterations {
         centroids = iterate(&raw_data, &centroids, x_size as usize, y_size as usize);
     }
     let iteration_time = start.elapsed();
     println!("Iterations completed in {iteration_time:?}");
 
     // create final image
-    let final_img = create_img(img.dimensions(), raw_data, centroids, distance, &mode);
+    let final_img = create_img(img.dimensions(), raw_data, centroids, &options.mode);
     // save image
-    final_img.save(out_path).unwrap();
+    final_img.save(options.output_path).unwrap();
     let img_time = start.elapsed() - iteration_time;
     println!("Image assembled and saved in {img_time:?}");
 

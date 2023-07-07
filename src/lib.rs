@@ -115,7 +115,7 @@ pub fn iterate(
             let mut min_dist = u64::MAX as f64;
             let mut centroid_id = centroids.len() + 1;
             for (c, centroid) in centroids.iter().enumerate() {
-                let dist = minkowski_distance(&centroid.to_rgb(), &new_pixel, 2.0);
+                let dist = distance(&centroid.to_rgb(), &new_pixel);
                 if dist < min_dist {
                     min_dist = dist;
                     centroid_id = c;
@@ -148,7 +148,6 @@ fn nearest_color(
     y: usize,
     data: &[Vec<[u8; 4]>],
     centroids: &[Centroid],
-    p: f64,
 ) -> Rgb<u8> {
     let [r, g, b, _] = data[y][x];
     let pixel = (u8_to_f64(r), u8_to_f64(g), u8_to_f64(b));
@@ -156,7 +155,7 @@ fn nearest_color(
     let mut centroid_id = 0;
 
     for (c, val) in centroids.iter().enumerate() {
-        let dist = minkowski_distance(&val.to_rgb(), &pixel, p);
+        let dist = distance(&val.to_rgb(), &pixel);
         if dist < min_dist {
             min_dist = dist;
             centroid_id = c;
@@ -171,13 +170,12 @@ pub fn create_img(
     size: (u32, u32),
     data: Vec<Vec<[u8; 4]>>,
     centroids: Vec<Centroid>,
-    p: f64,
     mode: &str
 ) -> ImageBuffer<Rgb<u8>, Vec<u8>> {
     let (x_size, y_size) = size;
     if mode == "n" {
         ImageBuffer::from_fn(x_size, y_size, |x,y| 
-        nearest_color(x as usize, y as usize, &data, &centroids,p)) 
+        nearest_color(x as usize, y as usize, &data, &centroids)) 
     } else if mode == "y" {
         ImageBuffer::from_fn(centroids.len() as u32, 1, |x,_|
         centroids[x as usize].to_pixel())
@@ -188,10 +186,10 @@ pub fn create_img(
 
 // 3D minkowski distance function
 // p=1 manhattan, p=2 euclidean, p=25+ chebyshev
-pub fn minkowski_distance(to: &(f64, f64, f64), from: &(f64, f64, f64), p: f64) -> f64 {
-    let dx = (to.0 - from.0).powf(p);
-    let dy = (to.1 - from.1).powf(p);
-    let dz = (to.2 - from.2).powf(p);
+pub fn distance(to: &(f64, f64, f64), from: &(f64, f64, f64)) -> f64 {
+    let dx = (to.0 - from.0) * (to.0 - from.0);
+    let dy = (to.1 - from.1) * (to.1 - from.1);
+    let dz = (to.2 - from.2) * (to.2 - from.2);
 
-    (dx.abs() + dy.abs() + dz.abs()).powf(1.0 / p)
+    (dx + dy + dz).sqrt()
 }
