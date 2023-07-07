@@ -28,7 +28,7 @@ impl Centroid {
         }
     }
 
-    pub fn to_rgb(&self) -> (f64, f64, f64) {
+    pub fn to_rgb(self) -> (f64, f64, f64) {
         (self.r, self.g, self.b)
     }
 
@@ -41,17 +41,22 @@ impl Centroid {
         }
     }
 
-    pub fn to_rgb_u8(&self) -> (u8, u8, u8) {
+    pub fn to_rgb_u8(self) -> (u8, u8, u8) {
         (
-            (self.r as f64 * u8::MAX as f64) as u8,
-            (self.g as f64 * u8::MAX as f64) as u8,
-            (self.b as f64 * u8::MAX as f64) as u8,
+            (self.r * u8::MAX as f64) as u8,
+            (self.g * u8::MAX as f64) as u8,
+            (self.b * u8::MAX as f64) as u8,
         )
+    }
+
+    fn to_pixel(self) -> image::Rgb<u8> {
+        let (r, g, b) = self.to_rgb_u8();
+        image::Rgb([r, g, b])
     }
 
     #[inline(always)]
     pub fn to_atom(self) -> AtomicPtr<Centroid> {
-        let ptr: *mut Centroid = Box::<Centroid>::into_raw(Box::new(self.clone()));
+        let ptr: *mut Centroid = Box::<Centroid>::into_raw(Box::new(self));
         AtomicPtr::new(ptr)
     }
 }
@@ -89,7 +94,7 @@ pub fn init_centroids(data: &Vec<Vec<[u8; 4]>>, means: &u16) -> Vec<Centroid> {
 }
 
 pub fn iterate(
-    img: &Vec<Vec<[u8; 4]>>,
+    img: &[Vec<[u8; 4]>],
     centroids: &Vec<Centroid>,
     x: usize,
     y: usize,
@@ -130,6 +135,7 @@ pub fn iterate(
             }
         })
     });
+    
     let new_centroids = new_centroids
         .iter()
         .map(|c| unsafe { *c.load(Ordering::Relaxed) }.average())
@@ -140,8 +146,8 @@ pub fn iterate(
 fn nearest_color(
     x: usize,
     y: usize,
-    data: &Vec<Vec<[u8; 4]>>,
-    centroids: &Vec<Centroid>,
+    data: &[Vec<[u8; 4]>],
+    centroids: &[Centroid],
     p: f64,
 ) -> Rgb<u8> {
     let [r, g, b, _] = data[y][x];
@@ -166,10 +172,18 @@ pub fn create_img(
     data: Vec<Vec<[u8; 4]>>,
     centroids: Vec<Centroid>,
     p: f64,
+    mode: &str
 ) -> ImageBuffer<Rgb<u8>, Vec<u8>> {
     let (x_size, y_size) = size;
-    ImageBuffer::from_fn(x_size, y_size, |x,y| 
-        nearest_color(x as usize, y as usize, &data, &centroids,p))  
+    if mode == "n" {
+        ImageBuffer::from_fn(x_size, y_size, |x,y| 
+        nearest_color(x as usize, y as usize, &data, &centroids,p)) 
+    } else if mode == "y" {
+        ImageBuffer::from_fn(centroids.len() as u32, 1, |x,_|
+        centroids[x as usize].to_pixel())
+    } else {
+        panic!("Invalid mode")
+    }
 } 
 
 // 3D minkowski distance function

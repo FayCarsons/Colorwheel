@@ -1,33 +1,33 @@
 mod lib;
 use lib::{create_img, get_raw_image, init_centroids, iterate, Centroid};
 
-use crate::imageops::{dither, ColorMap};
 use image::*;
-use std::io::{stdin};
-use std::env;
-use std::str::FromStr;
+use std::io::stdin;
 use std::time::Instant;
+use std::str::FromStr;
+
 
 fn prompt(line: &str) -> String {
     let mut input = String::new();
-    println!("{}", line);
+    println!("{line}");
     stdin().read_line(&mut input).unwrap();
     input.trim().to_string()
 }
 
-fn get_args() -> (String, String, u16, u16, f64) {    
+fn get_args() -> (String, String, u16, u16, f64, String) {    
     let input_path = prompt("Enter input path: ");
     let output_path = prompt("Enter output path: ");
     let k = u16::from_str(&prompt("Enter K value: ")).unwrap();
     let iterations = u16::from_str(&prompt("Enter # of iterations: ")).unwrap();
     let p = f64::from_str(&prompt("Enter distance metric: ")).unwrap();
+    let palette_mode = prompt("Use palette mode? (y/n): ").to_lowercase();
     
-    (input_path, output_path, k, iterations, p)
+    (input_path, output_path, k, iterations, p, palette_mode)
 }
 
 fn main() {
     // get command line args
-    let (in_path, out_path, k, iterations, distance) = get_args();    
+    let (in_path, out_path, k, iterations, distance, mode) = get_args();    
 
     // get start time
     let start = Instant::now();
@@ -50,7 +50,7 @@ fn main() {
     println!("Iterations completed in {iteration_time:?}");
 
     // create final image
-    let final_img = create_img(img.dimensions(), raw_data, centroids, distance);
+    let final_img = create_img(img.dimensions(), raw_data, centroids, distance, &mode);
     // save image
     final_img.save(out_path).unwrap();
     let img_time = start.elapsed() - iteration_time;
