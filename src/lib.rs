@@ -10,7 +10,7 @@ pub struct Centroid {
     r: f64,
     g: f64,
     b: f64,
-    num_pixels: u64
+    num_pixels: u64,
 }
 
 pub fn u8_to_f64(x: u8) -> f64 {
@@ -65,12 +65,7 @@ pub fn get_raw_image(img: &DynamicImage) -> Vec<Vec<[u8; 4]>> {
     let (x, y) = img.dimensions();
     (0..y)
         .into_par_iter()
-        .map(|y| {
-            (0..x)
-                .into_par_iter()
-                .map(|x| img.get_pixel(x, y).0)
-                .collect()
-        })
+        .map(|y| (0..x).map(|x| img.get_pixel(x, y).0).collect())
         .collect()
 }
 
@@ -135,7 +130,7 @@ pub fn iterate(
             }
         })
     });
-    
+
     let new_centroids = new_centroids
         .iter()
         .map(|c| unsafe { *c.load(Ordering::Relaxed) }.average())
@@ -143,12 +138,7 @@ pub fn iterate(
     new_centroids
 }
 
-fn nearest_color(
-    x: usize,
-    y: usize,
-    data: &[Vec<[u8; 4]>],
-    centroids: &[Centroid],
-) -> Rgb<u8> {
+fn nearest_color(x: usize, y: usize, data: &[Vec<[u8; 4]>], centroids: &[Centroid]) -> Rgb<u8> {
     let [r, g, b, _] = data[y][x];
     let pixel = (u8_to_f64(r), u8_to_f64(g), u8_to_f64(b));
     let mut min_dist = u64::MAX as f64;
@@ -170,19 +160,21 @@ pub fn create_img(
     size: (u32, u32),
     data: Vec<Vec<[u8; 4]>>,
     centroids: Vec<Centroid>,
-    mode: &str
+    mode: &str,
 ) -> ImageBuffer<Rgb<u8>, Vec<u8>> {
     let (x_size, y_size) = size;
     if mode == "n" {
-        ImageBuffer::from_fn(x_size, y_size, |x,y| 
-        nearest_color(x as usize, y as usize, &data, &centroids)) 
+        ImageBuffer::from_fn(x_size, y_size, |x, y| {
+            nearest_color(x as usize, y as usize, &data, &centroids)
+        })
     } else if mode == "y" {
-        ImageBuffer::from_fn(centroids.len() as u32, 1, |x,_|
-        centroids[x as usize].to_pixel())
+        ImageBuffer::from_fn(centroids.len() as u32, 1, |x, _| {
+            centroids[x as usize].to_pixel()
+        })
     } else {
-        panic!("Invalid mode")
+        panic!("Invalid mode!!")
     }
-} 
+}
 
 // 3D minkowski distance function
 // p=1 manhattan, p=2 euclidean, p=25+ chebyshev
@@ -191,5 +183,5 @@ pub fn distance(to: &(f64, f64, f64), from: &(f64, f64, f64)) -> f64 {
     let dy = (to.1 - from.1) * (to.1 - from.1);
     let dz = (to.2 - from.2) * (to.2 - from.2);
 
-    (dx + dy + dz).sqrt()
+    dx + dy + dz
 }
