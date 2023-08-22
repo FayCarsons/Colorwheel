@@ -4,12 +4,12 @@ use image::*;
 use rand::{self, seq::SliceRandom, thread_rng};
 use rayon::prelude::*;
 
-pub fn init_centroids(data: &Vec<&[f32]>, means: &usize) -> Vec<Bucket> {
+pub fn init_centroids(data: &[&[f32]], means: &usize) -> Vec<Bucket> {
     let mut rng = thread_rng();
     (0..*means)
         .map(|_| loop {
             if let Some(pixel) = data.choose(&mut rng) {
-                return Bucket::new(*pixel);
+                return Bucket::new(pixel);
             } else {
                 continue;
             }
@@ -19,13 +19,13 @@ pub fn init_centroids(data: &Vec<&[f32]>, means: &usize) -> Vec<Bucket> {
 
 // Parallel fold + reduce is the secret sauce here
 // buckets are accumulated, adding pixels who's value is "near", then averaged
-pub fn iterate(img: &Vec<&[f32]>, buckets: Vec<Bucket>, k: usize) -> Vec<Bucket> {
+pub fn iterate(img: &[&[f32]], buckets: Vec<Bucket>, k: usize) -> Vec<Bucket> {
     img.par_iter()
         .fold(
             || vec![Bucket::empty(); k],
             |mut new_buckets, pixel| {
-                let bucket = nearest_centroid(*pixel, &buckets);
-                new_buckets[bucket] = new_buckets[bucket].add_pixel(*pixel);
+                let bucket = nearest_centroid(pixel, &buckets);
+                new_buckets[bucket] = new_buckets[bucket].add_pixel(pixel);
                 new_buckets
             },
         )
@@ -43,7 +43,7 @@ pub fn iterate(img: &Vec<&[f32]>, buckets: Vec<Bucket>, k: usize) -> Vec<Bucket>
         .collect()
 }
 
-fn nearest_centroid(pixel: &[f32], buckets: &Vec<Bucket>) -> usize {
+fn nearest_centroid(pixel: &[f32], buckets: &[Bucket]) -> usize {
     let mut min_dist = u64::MAX as f32;
     let mut centroid_id = 0;
 
@@ -58,7 +58,7 @@ fn nearest_centroid(pixel: &[f32], buckets: &Vec<Bucket>) -> usize {
     centroid_id
 }
 
-fn nearest_color(idx: u32, data: &Vec<&[f32]>, buckets: &Vec<Bucket>) -> Rgb<u8> {
+fn nearest_color(idx: u32, data: &[&[f32]], buckets: &[Bucket]) -> Rgb<u8> {
     let pixel = data[idx as usize];
     let bucket = nearest_centroid(pixel, buckets);
 
@@ -67,14 +67,14 @@ fn nearest_color(idx: u32, data: &Vec<&[f32]>, buckets: &Vec<Bucket>) -> Rgb<u8>
 
 pub fn render(
     size: (u32, u32),
-    data: Vec<&[f32]>,
+    data: &[&[f32]],
     buckets: Vec<Bucket>,
     mode: Mode,
 ) -> ImageBuffer<Rgb<u8>, Vec<u8>> {
     let (width, height) = size;
     match mode {
         Mode::Image => ImageBuffer::from_fn(width, height, |x, y| {
-            nearest_color(y * width + x, &data, &buckets)
+            nearest_color(y * width + x, data, &buckets)
         }),
         Mode::Palette => {
             ImageBuffer::from_fn(buckets.len() as u32, 1, |x, _| {

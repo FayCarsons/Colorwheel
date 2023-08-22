@@ -1,4 +1,4 @@
 pub mod prompts;
-pub mod utils;
+pub mod lib;
 pub mod bucket;
 pub use bucket::Bucket;
