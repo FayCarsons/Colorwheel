@@ -4,7 +4,6 @@ use utils::{utils::{create_img, init_centroids, iterate, Bucket}, prompts::Optio
 use image::*;
 use std::time::Instant;
 
-
 fn main() {
     // get command line args
     let options = Options::new();
@@ -12,18 +11,17 @@ fn main() {
     // get start time
     let start = Instant::now();
 
-    // load image, get dimensions and raw RGBA data as 2d vec of 4 element arrays
-    let img: DynamicImage = image::open(options.input_path).unwrap();
-    let rgb8 = img.to_rgb8();
-    let raw_data: Vec<&[u8]> = rgb8.as_bytes().chunks_exact(3).collect::<Vec<&[u8]>>();
+    // load image and convert to flat array of pixels
+    let img = image::open(options.input_path).unwrap();
+    let rgbf = img.to_rgb32f();
+    let raw_data = rgbf.as_raw().chunks_exact(3).collect();
 
-
-    // place centroids, random pixels in image
+    // create buckets from k random pixels in image
     let init_centroids = init_centroids(&raw_data, &options.k);
 
     // do clustering/averaging
     let buckets = (0..options.k).fold(init_centroids, |acc: Vec<Bucket>, _| {
-        iterate(&raw_data, acc, options.k as usize)
+        iterate(&raw_data, acc, options.k)
     });
 
     // create final image
