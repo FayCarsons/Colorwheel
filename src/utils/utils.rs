@@ -1,4 +1,5 @@
 pub use super::bucket::Bucket;
+use super::prompts::Mode;
 use image::*;
 use rand::{self, seq::SliceRandom, thread_rng};
 use rayon::prelude::*;
@@ -68,19 +69,18 @@ pub fn render(
     size: (u32, u32),
     data: Vec<&[f32]>,
     buckets: Vec<Bucket>,
-    mode: &str,
+    mode: Mode,
 ) -> ImageBuffer<Rgb<u8>, Vec<u8>> {
     let (width, height) = size;
-    if mode == "n" {
-        ImageBuffer::from_fn(width, height, |x, y| {
+    match mode {
+        Mode::Image => ImageBuffer::from_fn(width, height, |x, y| {
             nearest_color(y * width + x, &data, &buckets)
-        })
-    } else if mode == "y" {
-        ImageBuffer::from_fn(buckets.len() as u32, 1, |x, _| {
-            buckets[x as usize].to_pixel()
-        })
-    } else {
-        panic!("Invalid mode!!")
+        }),
+        Mode::Palette => {
+            ImageBuffer::from_fn(buckets.len() as u32, 1, |x, _| {
+                buckets[x as usize].to_pixel()
+            })
+        }
     }
 }
 

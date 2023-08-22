@@ -9,7 +9,7 @@ pub struct Options {
     pub output_path: String,
     pub k: usize,
     pub iterations: usize,
-    pub mode: String,
+    pub mode: Mode,
 }
 
 /// enum designating how to treat a given CLI arg
@@ -18,6 +18,11 @@ enum Prompt {
     Safe,
     Num,
     Mode,
+}
+
+pub enum Mode {
+    Palette,
+    Image
 }
 
 impl Options {
@@ -51,7 +56,7 @@ impl Options {
             output_path: opts[1].clone(),
             k: usize::from_str(&opts[2]).unwrap(),
             iterations: usize::from_str(&opts[3]).unwrap(),
-            mode: opts[4].clone(),
+            mode: if opts[4] == "y" {Mode::Palette} else {Mode::Image},
         }
     }
 }
