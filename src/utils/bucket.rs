@@ -22,7 +22,7 @@ impl Bucket {
 
     pub fn new(pixel: &[f32]) -> Bucket {
         // Pixels should never have < 3 values so we can panic here
-        let [r, g, b] = pixel[0..3] else { panic!() };
+        let [r, g, b] = pixel[0..3] else { panic!("Invalid pixel format!") };
         Bucket {
             r,
             g,

@@ -16,6 +16,8 @@ pub fn init_centroids(data: &Vec<&[f32]>, means: &usize) -> Vec<Bucket> {
         .collect()
 }
 
+// Parallel fold + reduce is the secret sauce here
+// buckets are accumulated, adding pixels who's value is "near", then averaged
 pub fn iterate(img: &Vec<&[f32]>, buckets: Vec<Bucket>, k: usize) -> Vec<Bucket> {
     img.par_iter()
         .fold(
@@ -28,9 +30,9 @@ pub fn iterate(img: &Vec<&[f32]>, buckets: Vec<Bucket>, k: usize) -> Vec<Bucket>
         )
         .reduce(
             || vec![Bucket::empty(); k],
-            |mut res, current| {
+            |mut res, curr| {
                 for i in 0..k {
-                    res[i] = res[i] + current[i]
+                    res[i] = res[i] + curr[i]
                 }
                 res
             },
@@ -40,7 +42,6 @@ pub fn iterate(img: &Vec<&[f32]>, buckets: Vec<Bucket>, k: usize) -> Vec<Bucket>
         .collect()
 }
 
-#[inline]
 fn nearest_centroid(pixel: &[f32], buckets: &Vec<Bucket>) -> usize {
     let mut min_dist = u64::MAX as f32;
     let mut centroid_id = 0;
@@ -63,7 +64,7 @@ fn nearest_color(idx: u32, data: &Vec<&[f32]>, buckets: &Vec<Bucket>) -> Rgb<u8>
     buckets[bucket].to_pixel()
 }
 
-pub fn create_img(
+pub fn render(
     size: (u32, u32),
     data: Vec<&[f32]>,
     buckets: Vec<Bucket>,
@@ -83,7 +84,6 @@ pub fn create_img(
     }
 }
 
-#[inline]
 /// Euclidean distance for rgb32f
 pub fn distance(to: &[f32], from: &[f32]) -> f32 {
     from.iter()

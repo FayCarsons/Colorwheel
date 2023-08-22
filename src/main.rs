@@ -25,11 +25,8 @@ fn main() {
     });
 
     // create final image
-    let final_img = create_img(img.dimensions(), raw_data, buckets, &options.mode);
+    let final_img = render(img.dimensions(), raw_data, buckets, &options.mode);
+    
     // save image
     final_img.save(options.output_path).unwrap();
-
-    // get duration
-    let duration = start.elapsed();
-    println!("Total time: {duration:?}");
 }
