@@ -1,7 +1,6 @@
-pub use super::bucket::Bucket;
-use super::prompts::Mode;
+pub use super::{bucket::Bucket, prompts::Mode};
 use image::*;
-use rand::{self, seq::SliceRandom, thread_rng};
+use rand::{seq::SliceRandom, thread_rng};
 use rayon::prelude::*;
 
 pub fn init_centroids(data: &[&[f32]], means: &usize) -> Vec<Bucket> {
@@ -22,18 +21,18 @@ pub fn init_centroids(data: &[&[f32]], means: &usize) -> Vec<Bucket> {
 pub fn iterate(img: &[&[f32]], buckets: Vec<Bucket>, k: usize) -> Vec<Bucket> {
     img.par_iter()
         .fold(
-            || vec![Bucket::empty(); k],
+            || buckets.clone(),
             |mut new_buckets, pixel| {
                 let bucket = nearest_centroid(pixel, &buckets);
-                new_buckets[bucket] = new_buckets[bucket].add_pixel(pixel);
+                new_buckets[bucket] += *pixel;
                 new_buckets
             },
         )
         .reduce(
-            || vec![Bucket::empty(); k],
+            || buckets.clone(),
             |mut res, curr| {
                 for i in 0..k {
-                    res[i] = res[i] + curr[i]
+                    res[i] += curr[i]
                 }
                 res
             },
@@ -48,7 +47,7 @@ fn nearest_centroid(pixel: &[f32], buckets: &[Bucket]) -> usize {
     let mut centroid_id = 0;
 
     for (c, val) in buckets.iter().enumerate() {
-        let dist = distance(&val.to_rgb_f32(), pixel);
+        let dist = distance(&<[f32; 3]>::from(val), pixel);
         if dist < min_dist {
             min_dist = dist;
             centroid_id = c;
@@ -62,7 +61,7 @@ fn nearest_color(idx: u32, data: &[&[f32]], buckets: &[Bucket]) -> Rgb<u8> {
     let pixel = data[idx as usize];
     let bucket = nearest_centroid(pixel, buckets);
 
-    buckets[bucket].to_pixel()
+    Rgb::from(buckets[bucket])
 }
 
 pub fn render(
@@ -77,8 +76,8 @@ pub fn render(
             nearest_color(y * width + x, data, &buckets)
         }),
         Mode::Palette => {
-            ImageBuffer::from_fn(buckets.len() as u32, 1, |x, _| {
-                buckets[x as usize].to_pixel()
+            ImageBuffer::from_fn(buckets.len() as u32 * 100, 100, |x, _| {
+                Rgb::from(buckets[x as usize / 100])
             })
         }
     }

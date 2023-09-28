@@ -1,7 +1,7 @@
-use std::ops::Add;
+use std::ops::{AddAssign};
 
 /// Centroid/Bucket, holding one of K values for pixels to be placed into
-#[derive(Clone, Copy, Debug)]
+#[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
 pub struct Bucket {
     r: f32,
     g: f32,
@@ -9,17 +9,10 @@ pub struct Bucket {
     num_pixels: u64,
 }
 
-impl Bucket {
-    pub fn empty() -> Self {
-        let [r, g, b] = [0.; 3];
-        Bucket {
-            r,
-            g,
-            b,
-            num_pixels: 1,
-        }
-    }
+unsafe impl Send for Bucket {}
+unsafe impl Sync for Bucket {}
 
+impl Bucket {
     pub fn new(pixel: &[f32]) -> Bucket {
         // Pixels should never have < 3 values so we can panic here
         let [r, g, b] = pixel[0..3] else { panic!("Invalid pixel format!") };
@@ -31,29 +24,6 @@ impl Bucket {
         }
     }
 
-    fn to_rgb_u8(self) -> [u8; 3] {
-        [
-            (self.r * u8::MAX as f32) as u8,
-            (self.g * u8::MAX as f32) as u8,
-            (self.b * u8::MAX as f32) as u8,
-        ]
-    }
-
-    pub fn to_rgb_f32(self) -> [f32; 3] {
-        [self.r, self.g, self.b]
-    }
-
-    pub fn add_pixel(&self, pixel: &[f32]) -> Self {
-        // Pixels should never have < 3 values so we can panic here
-        let [r, g, b] = pixel[0..3] else { panic!("Invalid pixel format!") };
-        Bucket {
-            r: self.r + r,
-            g: self.g + g,
-            b: self.b + b,
-            num_pixels: self.num_pixels + 1,
-        }
-    }
-
     pub fn average(&self) -> Bucket {
         Bucket {
             r: self.r / (self.num_pixels as f32),
@@ -62,21 +32,44 @@ impl Bucket {
             num_pixels: 1,
         }
     }
+}
 
-    pub fn to_pixel(self) -> image::Rgb<u8> {
-        image::Rgb(self.to_rgb_u8())
+impl AddAssign<Bucket> for Bucket {
+    fn add_assign(&mut self, rhs: Bucket) {
+        self.r += rhs.r;
+        self.g += rhs.g;
+        self.b += rhs.b;
+        self.num_pixels += rhs.num_pixels;
     }
 }
 
-impl Add<Bucket> for Bucket {
-    type Output = Self;
+impl AddAssign<&[f32]> for Bucket {
+    fn add_assign(&mut self, rhs: &[f32]) {
+        let [r,g,b] = rhs else {
+            // A pixel should *always* have 3 values so we can panic here
+            panic!("Received invalid pixel!")
+        };
 
-    fn add(self, other: Bucket) -> Self {
-        Bucket {
-            r: self.r + other.r,
-            g: self.g + other.g,
-            b: self.b + other.b,
-            num_pixels: self.num_pixels + other.num_pixels,
-        }
+        self.r += r;
+        self.g += g;
+        self.b += b;
+        self.num_pixels += 1;
+    }
+}
+
+impl From<&Bucket> for [f32; 3] {
+    fn from(value: &Bucket) -> Self {
+        [value.r, value.g, value.b]
+    }
+}
+
+impl From<Bucket> for image::Rgb<u8> {
+    fn from(value: Bucket) -> Self {
+        Self([
+            (value.r * u8::MAX as f32) as u8,
+            (value.g * u8::MAX as f32) as u8,
+            (value.b * u8::MAX as f32) as u8,
+        ])
+        
     }
 }
