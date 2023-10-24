@@ -1,5 +1,5 @@
 # Colorwheel
-A Rust CLI program utilizing the K-means algorithm to quantize and/or generate color palettes(formatted for use as WebGL/OpenGL/WebGPU textures) from images.
+A Rust CLI program utilizing the K-means algorithm to quantize and/or generate color palettes(formatted for use texture uniforms) from images.
 
 To run first clone the repository, build with ```cargo build --release```, 
 then run with either ```./target/release/colorwheel``` or ```cargo run --release```, 
