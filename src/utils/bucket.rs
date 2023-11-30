@@ -1,4 +1,4 @@
-use std::ops::{AddAssign};
+use std::ops::AddAssign;
 
 /// Centroid/Bucket, holding one of K values for pixels to be placed into
 #[derive(Clone, Copy, Debug, PartialEq, PartialOrd)]
@@ -9,13 +9,12 @@ pub struct Bucket {
     num_pixels: u64,
 }
 
-unsafe impl Send for Bucket {}
-unsafe impl Sync for Bucket {}
-
 impl Bucket {
     pub fn new(pixel: &[f32]) -> Bucket {
         // Pixels should never have < 3 values so we can panic here
-        let [r, g, b] = pixel[0..3] else { panic!("Invalid pixel format!") };
+        let [r, g, b] = pixel[0..3] else {
+            panic!("Invalid pixel format!")
+        };
         Bucket {
             r,
             g,
@@ -45,7 +44,7 @@ impl AddAssign<Bucket> for Bucket {
 
 impl AddAssign<&[f32]> for Bucket {
     fn add_assign(&mut self, rhs: &[f32]) {
-        let [r,g,b] = rhs else {
+        let [r, g, b] = rhs else {
             // A pixel should *always* have 3 values so we can panic here
             panic!("Received invalid pixel!")
         };
@@ -70,6 +69,5 @@ impl From<Bucket> for image::Rgb<u8> {
             (value.g * u8::MAX as f32) as u8,
             (value.b * u8::MAX as f32) as u8,
         ])
-        
     }
 }

@@ -1,7 +1,11 @@
 // Handles CLI prompts and arg parsing
 // TODO: add cute UI :3
 
-use std::{io::{stdin, stdout, Write}, path::Path, str::FromStr};
+use std::{
+    io::{stdin, stdout, Write},
+    path::Path,
+    str::FromStr,
+};
 
 /// Struct containing script parameters, collected via CLI at runtime
 pub struct Options {
@@ -20,33 +24,25 @@ enum Prompt {
     Mode,
 }
 
+// Enum designating whether program should output a stylized image or centroid values as palette
 pub enum Mode {
     Palette,
-    Image
+    Image,
 }
 
 impl Options {
     pub fn new() -> Options {
         let prompts = [
-            "Enter input path: ",
-            "Enter output path: ",
-            "Enter K value: ",
-            "Enter # of iterations: ",
-            "Create palette? (y/n): ",
-        ];
-
-        let parse = [
-            Prompt::Path,
-            Prompt::Safe,
-            Prompt::Num,
-            Prompt::Num,
-            Prompt::Mode,
+            ("Enter input path: ", Prompt::Path),
+            ("Enter output path: ", Prompt::Safe),
+            ("Enter K value: ", Prompt::Num),
+            ("Enter # of iterations: ", Prompt::Num),
+            ("Create palette? (y/n): ", Prompt::Mode),
         ];
 
         // group prompt text andenum together, then call prompt fn
         let opts = prompts
-            .iter()
-            .zip(parse)
+            .into_iter()
             .map(|(pr, pa)| prompt(pr, pa))
             .collect::<Vec<String>>();
 
@@ -56,7 +52,10 @@ impl Options {
             output_path: opts[1].clone(),
             k: usize::from_str(&opts[2]).unwrap(),
             iterations: usize::from_str(&opts[3]).unwrap(),
-            mode: if opts[4] == "y" {Mode::Palette} else {Mode::Image},
+            mode: match opts[4].to_lowercase().as_str() {
+                "y" | "yes" => Mode::Palette,
+                _ => Mode::Image,
+            },
         }
     }
 }
@@ -83,17 +82,32 @@ fn prompt(line: &str, parse: Prompt) -> String {
         stdin().read_line(&mut input).unwrap();
 
         // Match prompt with enum to determine how its parsed
-        // TODO: wrestle with lifetimes, make these return Option<&str> 
+        // TODO: wrestle with lifetimes, make these return Option<&str>
         let parse_fn = match parse {
-            Prompt::Path => |p: &str| Path::new(&p.trim()).exists() ,
-            Prompt::Safe => |_: &str| true,
-            Prompt::Num => |n: &str| usize::from_str(n.trim()).is_ok(),
-            Prompt::Mode => |m: &str| m.trim() == "y" || m.trim() == "n" ,
+            Prompt::Path => |p: &str| {
+                if Path::new(&p.trim()).exists() {
+                    Some(p.to_string())
+                } else {
+                    None
+                }
+            },
+            Prompt::Safe => |s: &str| Some(s.to_string()),
+            Prompt::Num => |n: &str| {
+                if n.trim().chars().all(|c| c.is_ascii_digit()) {
+                    Some(n.to_string())
+                } else {
+                    None
+                }
+            },
+            Prompt::Mode => |m: &str| match m.trim().to_lowercase().as_str() {
+                "n" | "no" | "y" | "yes" => Some(m.to_string()),
+                _ => None,
+            },
         };
 
         // if parse is succesful, return trimmed line, otherwise prompt again
-        if parse_fn(&input) {
-            return input.trim().to_string();
+        if let Some(out) = parse_fn(&input) {
+            return out;
         } else {
             first = false;
             continue;

@@ -3,15 +3,13 @@ use image::*;
 use rand::{seq::SliceRandom, thread_rng};
 use rayon::prelude::*;
 
-pub fn init_centroids(data: &[&[f32]], means: &usize) -> Vec<Bucket> {
+pub fn init_buckets(data: &[&[f32]], means: &usize) -> Vec<Bucket> {
     let mut rng = thread_rng();
     (0..*means)
-        .map(|_| loop {
-            if let Some(pixel) = data.choose(&mut rng) {
-                return Bucket::new(pixel);
-            } else {
-                continue;
-            }
+        .map(|_| {
+            // Program relies on image not being empty so we can panic here
+            let pixel = data.choose(&mut rng).expect("Image contains no pixels");
+            Bucket::new(pixel)
         })
         .collect()
 }
@@ -20,6 +18,7 @@ pub fn init_centroids(data: &[&[f32]], means: &usize) -> Vec<Bucket> {
 // buckets are accumulated, adding pixels who's value is "near", then averaged
 pub fn iterate(img: &[&[f32]], buckets: Vec<Bucket>, k: usize) -> Vec<Bucket> {
     img.par_iter()
+        // Fold creates multiple copies of buckets with image pixels added to them
         .fold(
             || buckets.clone(),
             |mut new_buckets, pixel| {
@@ -28,6 +27,7 @@ pub fn iterate(img: &[&[f32]], buckets: Vec<Bucket>, k: usize) -> Vec<Bucket> {
                 new_buckets
             },
         )
+        // and reduce adds them all together
         .reduce(
             || buckets.clone(),
             |mut res, curr| {
@@ -38,6 +38,7 @@ pub fn iterate(img: &[&[f32]], buckets: Vec<Bucket>, k: usize) -> Vec<Bucket> {
             },
         )
         .iter()
+        // Buckets are then averaged
         .map(|c| c.average())
         .collect()
 }
@@ -75,11 +76,9 @@ pub fn render(
         Mode::Image => ImageBuffer::from_fn(width, height, |x, y| {
             nearest_color(y * width + x, data, &buckets)
         }),
-        Mode::Palette => {
-            ImageBuffer::from_fn(buckets.len() as u32 * 100, 100, |x, _| {
-                Rgb::from(buckets[x as usize / 100])
-            })
-        }
+        Mode::Palette => ImageBuffer::from_fn(buckets.len() as u32 * 100, 100, |x, _| {
+            Rgb::from(buckets[x as usize / 100])
+        }),
     }
 }
 
