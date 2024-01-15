@@ -46,7 +46,6 @@ impl Options {
             .map(|(pr, pa)| prompt(pr, pa))
             .collect::<Vec<String>>();
 
-        println!("{opts:?}");
         // return validated result
         Options {
             input_path: opts[0].clone(),
