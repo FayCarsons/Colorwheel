@@ -10,7 +10,7 @@ fn main() {
     // get command line args
     let options = Options::new();
 
-    // load image and convert to flat array of pixels
+    // load image and convert to flat slice of pixels
     let img = image::open(options.input_path).unwrap();
     let rgbf = img.to_rgb32f();
     let raw_data: Vec<&[f32]> = rgbf.as_raw().chunks_exact(3).collect();

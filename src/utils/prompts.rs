@@ -40,18 +40,19 @@ impl Options {
             ("Create palette? (y/n): ", Prompt::Mode),
         ];
 
-        // group prompt text andenum together, then call prompt fn
+        // group prompt text and enum together, then call prompt fn
         let opts = prompts
             .into_iter()
             .map(|(pr, pa)| prompt(pr, pa))
             .collect::<Vec<String>>();
 
+        println!("{opts:?}");
         // return validated result
         Options {
             input_path: opts[0].clone(),
             output_path: opts[1].clone(),
-            k: usize::from_str(&opts[2]).unwrap(),
-            iterations: usize::from_str(&opts[3]).unwrap(),
+            k: usize::from_str(&opts[2]).expect("Cannot parse K value!"),
+            iterations: usize::from_str(&opts[3]).expect("Cannot parse iterations!"),
             mode: match opts[4].to_lowercase().as_str() {
                 "y" | "yes" => Mode::Palette,
                 _ => Mode::Image,
@@ -107,7 +108,7 @@ fn prompt(line: &str, parse: Prompt) -> String {
 
         // if parse is succesful, return trimmed line, otherwise prompt again
         if let Some(out) = parse_fn(&input) {
-            return out;
+            return out.replace('\n', "");
         } else {
             first = false;
             continue;

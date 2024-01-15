@@ -1,0 +1,2 @@
+{:tasks {build (shell "cargo build --release")
+         run (shell "/Users/fay/Desktop/Code/Rust/Colorwheel/target/release/colorwheel")}}
